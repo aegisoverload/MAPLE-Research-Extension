@@ -44,6 +44,13 @@ CUDA_VISIBLE_DEVICES=$1 python workplace_biorxiv.py --data_path ../biorxiv/biorx
 For the value of rho, please use `./Privacy_accounting.ipynb` for our pre-computed value. You may also set your own value.
 
 ## Run MAPLE
+
+### Precompute the embedding.
+```
+python ./biorxiv/add_t5emb.py
+python ./openreview/add_t5emb.py
+```
+
 For dataset = biorxiv/openreview, please check `./{dataset}/main_experiment.sh` if you want to run a specific method and hyperparameter setting. Otherwise you may simply run
 ```
 bash ./{dataset}/main_experiment.sh [YOUR CUDA TO USE.]
