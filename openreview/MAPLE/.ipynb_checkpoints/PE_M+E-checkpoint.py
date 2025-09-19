@@ -66,10 +66,55 @@ def create_review_generation_prompt(new_metadata, examples, n_sample=5):
         )
     }
     
+    # Do subsampling from the examples. We will prioritize examples that are aligned the most with new_metadata
+    if n_sample:
+        examples = get_top_n_by_hamming_distance(examples, new_metadata, n_sample)
+    
+    # 2. First User Message (MODIFIED):
+    # We combine the main instructions and the first few-shot example into ONE user turn
+    # to fix the user/user sequence error.
+    first_example_metadata, first_example_text = examples[0]
+    # if there are keywords, merge them into a list
+    first_example_metadata = metadata_merge_keywords(first_example_metadata, columns_name=['keywords_group_1','keywords_group_2','keywords_group_3'])
+    
+    first_metadata_str = json.dumps(first_example_metadata, indent=2)
     instructions = f"""
-**Task:** Your goal is to generate a single, high-quality, structurally sound, and realistic peer review for the top-tier machine learning conferences. Now, following all the instructions, generate a new synthetic review. Remember, your response must ONLY be the text of the review.```
+**Task:** Your goal is to generate a single, high-quality, structurally sound, and realistic peer review for the top-tier machine learning conferences **only** based on the provided metadata. I will provide you with a few examples of metadata and the corresponding high-quality review. After the examples, I will provide a final set of metadata for you to process.
+
+**Instructions:**
+
+1.  **Invent from Specification:** You must write a completely new review from scratch. The review's content, arguments, and structure must be a logical and detailed embodiment of the provided **[METADATA]**.
+2.  **Justify the Metadata:** Every aspect of your review must support the metadata. You should prioritize `area` and `recommendation`, then `keywords` (if exist), and then other metadata.
+3.  **Adhere to Length:** The generated review should be approximately the length specified by the `word_count` in the metadata (deviate no more than 50 words).
+
+Let's begin with the first example. Here is the metadata for example #1 :\n\n**[METADATA]:**\n```json\n{first_metadata_str}\n```
 """
-    messages = [system_message, {"role": "user", "content": instructions.strip()}]
+    messages = [system_message, {"role": "user", "content": instructions.strip()}, {"role": "assistant", "content": first_example_text}]
+
+    # 3. Few-Shot Examples: Add each example as a user/assistant turn.
+    for i, (metadata, text) in enumerate(examples[1:]):
+        # if there are keywords, merge them into a list
+        metadata = metadata_merge_keywords(metadata, columns_name=['keywords_group_1','keywords_group_2','keywords_group_3'])
+        metadata_str = json.dumps(metadata, indent=2)
+        
+        # User provides the metadata for the example
+        user_example_prompt = f"Here is the metadata for example #{i+2}:\n\n**[METADATA]:**\n```json\n{metadata_str}\n```"
+        messages.append({"role": "user", "content": user_example_prompt})
+        
+        # Assistant provides the "correct" review for that metadata
+        messages.append({"role": "assistant", "content": text})
+
+    # 4. Final Generation Task: The final user message prompts the model for the new review.
+    new_metadata = metadata_merge_keywords(new_metadata, columns_name=['keywords_group_1','keywords_group_2','keywords_group_3'])
+    new_metadata_str = json.dumps(new_metadata, indent=2)
+    final_user_prompt = f"""
+Excellent. Now, following all the instructions, generate a new synthetic review for the final metadata below. Remember, your response must ONLY be the text of the review.
+**[METADATA]:**
+```json
+{new_metadata_str}
+```
+"""
+    messages.append({"role": "user", "content": final_user_prompt.strip()})
     
     return messages
 
@@ -100,7 +145,7 @@ def create_review_variation_prompt(new_metadata, text_to_variate, examples):
             {
                 "role": "user",
                 "content": (
-                    f"Here is the example review:\n\n{text_to_variate}\n\nNow, generate a new, unique review for a different but related study."
+                    f"Here is the example review:\n\n{text_to_variate}\n\nNow, generate a new, unique review for a different but related study. Make sure the resulting review has approximately {int(new_metadata['word_count'])} word."
                 )
             }
         ]
