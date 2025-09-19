@@ -2,13 +2,15 @@
 import torch
 import os
 import random
-
+import re
 # This is for finding nearest in-context examples.
 import heapq
 
 ###
 import pandas as pd
+import numpy as np
 from vllm.v1.sample.logits_processor import LogitsProcessor
+from transformers import AutoTokenizer
 
 def set_seed(seed_value=42):
     """

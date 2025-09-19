@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from datasets import Dataset
 from vllm import LLM, SamplingParams
@@ -9,6 +10,7 @@ import json
 import re
 import torch 
 import heapq
+import random
 
 from pe.histogram.nearest_neighbor_backend.sklearn import search
 from pe.embedding.text import SentenceTransformer
