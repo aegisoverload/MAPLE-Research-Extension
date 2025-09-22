@@ -4,13 +4,13 @@ GPU=$1
 
 # eps = inf
 CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
-    --target_dir "./results/MAPLE/epsinf_5shot_50_10examples" \
+    --target_dir "./results/MAPLE/epsinf_10shot_50_10examples" \
     --priv_file_path ../train_dataset_with_metadata_v4_t5emb.csv \
     --train_file_path '../train_dataset_with_metadata_v4_t5emb.csv' \
     --val_file_path ../val_dataset_with_metadata_v4.csv \
     --num_incontext 50 \
     --n_sample 10 \
-    --PE_T 4 \
+    --PE_T 9 \
     --PE_variate \
     --PE_noise_multiplier 0.0
 
@@ -18,11 +18,11 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
 CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --target_dir "./results/MAPLE/epsinf_3shot_50_10examples" \
     --priv_file_path ../train_dataset_with_metadata_v4_t5emb.csv \
-    --train_file_path '../train_dataset_with_metadata_v4_t5emb.csv' \
+    --train_file_path '../openreview_train_metadata_aim_eps4.0_(1,9).csv' \
     --val_file_path ../val_dataset_with_metadata_v4.csv \
     --num_incontext 50 \
     --n_sample 10 \
-    --PE_T 4 \
+    --PE_T 2 \
     --PE_variate \
     --PE_noise_multiplier 1.876414555237503
     
@@ -30,25 +30,25 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
 CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --target_dir "./results/MAPLE/epsinf_3shot_50_10examples" \
     --priv_file_path ../train_dataset_with_metadata_v4_t5emb.csv \
-    --train_file_path '../train_dataset_with_metadata_v4_t5emb.csv' \
+    --train_file_path '../openreview_train_metadata_aim_eps2.0_(1,9).csv' \
     --val_file_path ../val_dataset_with_metadata_v4.csv \
     --num_incontext 50 \
     --n_sample 10 \
-    --PE_T 4 \
+    --PE_T 2 \
     --PE_variate \
     --PE_noise_multiplier 3.4202124076206792
     
 # eps = 1.0
 CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
-    --target_dir "./results/MAPLE/epsinf_1shot_50_10examples" \
+    --target_dir "./results/MAPLE/epsinf_3shot_50_10examples" \
     --priv_file_path ../train_dataset_with_metadata_v4_t5emb.csv \
-    --train_file_path '../train_dataset_with_metadata_v4_t5emb.csv' \
+    --train_file_path '../openreview_train_metadata_aim_eps1.0_(1,9).csv' \
     --val_file_path ../val_dataset_with_metadata_v4.csv \
     --num_incontext 50 \
     --n_sample 10 \
-    --PE_T 4 \
+    --PE_T 2 \
     --PE_variate \
-    --PE_noise_multiplier 3.6519642926622855
+    --PE_noise_multiplier 6.325387702318415
 
 
 ### PE part ###
