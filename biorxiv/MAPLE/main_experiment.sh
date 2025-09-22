@@ -12,7 +12,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 0.0
     
 # AugPE, eps=\infty
@@ -22,7 +21,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 0.0
     
 # MAPLE, eps=4.0, noise calibrated by zCDP (suboptimal).
@@ -34,7 +32,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 4 \
-    --PE_variate \
     --PE_noise_multiplier 2.5787580697142025
     
 # AugPE, eps=4.0, noise calibrated by GDP directly.
@@ -44,7 +41,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 3.214362874574832
     
 # MAPLE, eps=2.0, noise calibrated by zCDP (suboptimal).
@@ -56,7 +52,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 4 \
-    --PE_variate \
     --PE_noise_multiplier 4.7482491352519505
     
 # AugPE, eps=2.0, noise calibrated by GDP directly.
@@ -66,7 +61,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 5.872135064401613
     
 # MAPLE, eps=1.0, noise calibrated by zCDP (suboptimal).
@@ -78,7 +72,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 2 \
-    --PE_variate \
     --PE_noise_multiplier 6.869194837509232
     
 # AugPE, eps=1.0, noise calibrated by GDP directly.
@@ -88,7 +81,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 10.889585799108582
     
 ###### Ablation study #######
@@ -101,7 +93,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE_nometadata.py \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 0.0
     
 # AugPE+M
@@ -111,5 +102,4 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE_noexamples.py \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 0.0

@@ -11,7 +11,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 9 \
-    --PE_variate \
     --PE_noise_multiplier 0.0
 
 # eps = 4.0
@@ -23,7 +22,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 2 \
-    --PE_variate \
     --PE_noise_multiplier 1.876414555237503
     
 # eps = 2.0
@@ -35,7 +33,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 2 \
-    --PE_variate \
     --PE_noise_multiplier 3.4202124076206792
     
 # eps = 1.0
@@ -47,7 +44,6 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     --num_incontext 50 \
     --n_sample 10 \
     --PE_T 2 \
-    --PE_variate \
     --PE_noise_multiplier 6.325387702318415
 
 
