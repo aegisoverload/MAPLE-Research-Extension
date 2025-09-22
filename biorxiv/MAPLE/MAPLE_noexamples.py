@@ -427,15 +427,9 @@ if __name__ == '__main__':
         print(f"PE iteration 0 ends and results saved.")
         # ===== rest PE iterations =====
         for iteration in range(1,args.PE_T+1):
-            rnd_df = sample_metadata_for_randomapi(df_trn, target_ids, num_sample_per_id, 5)
-            rnd_df = api.RANDOM_API(rnd_df)
-            if args.PE_variate:
-                rnd_df = api.VARIATION_API(rnd_df)
-            var_df = pd.concat([cur_df] * 1, ignore_index=True)
-            var_df = api.RANDOM_API(var_df)
-            if args.PE_variate:
-                var_df = api.VARIATION_API(var_df)
-            cur_df = pd.concat([cur_df,rnd_df,var_df], ignore_index=True)
+            var_df = pd.concat([cur_df] * args.PE_L_random, ignore_index=True)
+            var_df = api.VARIATION_API(var_df)
+            cur_df = pd.concat([cur_df,var_df], ignore_index=True)
             
             # Voting
             cur_df = VH.get_voting_histogram(cur_df)
@@ -450,15 +444,9 @@ if __name__ == '__main__':
         cur_df = pd.read_csv(f'{args.target_dir}/PE_iter_{args.PE_continue_iter}.csv')
         # ===== rest PE iterations =====
         for iteration in range(args.PE_continue_iter+1,args.PE_T+1):
-            rnd_df = sample_metadata_for_randomapi(df_trn, target_ids, num_sample_per_id, 5)
-            rnd_df = api.RANDOM_API(rnd_df)
-            if args.PE_variate:
-                rnd_df = api.VARIATION_API(rnd_df)
-            var_df = pd.concat([cur_df] * 1, ignore_index=True)
-            var_df = api.RANDOM_API(var_df)
-            if args.PE_variate:
-                var_df = api.VARIATION_API(var_df)
-            cur_df = pd.concat([cur_df,rnd_df,var_df], ignore_index=True)
+            var_df = pd.concat([cur_df] * args.PE_L_random, ignore_index=True)
+            var_df = api.VARIATION_API(var_df)
+            cur_df = pd.concat([cur_df,var_df], ignore_index=True)
             
             # Voting
             cur_df = VH.get_voting_histogram(cur_df)

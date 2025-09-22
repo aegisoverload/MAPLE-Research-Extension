@@ -449,18 +449,7 @@ if __name__ == '__main__':
     # === Load training data ===
     df_trn = pd.read_csv(args.train_file_path)
     prv_df = pd.read_csv(args.priv_file_path)
-    
-    df_trn = df_trn[METADATA] # keep only metadata (non-private part)
-    
-    # Add the PE.LABEL_ID mapping
-    mapping_df = prv_df[['area', 'recommendation', 'PE.LABEL_ID']].drop_duplicates()
-    df_trn_mapped = pd.merge(df_trn, mapping_df, on=['area', 'recommendation'], how='left')
-    df_trn['PE.LABEL_ID'] = df_trn_mapped['PE.LABEL_ID']
-    # Remove the nan rows (as these combinations do not appear in prv_df)
-    df_trn = df_trn.dropna()
-    # Now we can safely convert PE.LABEL_ID to int
-    df_trn['PE.LABEL_ID'] = df_trn['PE.LABEL_ID'].astype(int)
-    
+
     
     df_trn = df_trn[['PE.LABEL_ID']+METADATA] # keep only metadata (non-private/DPfied part)
     num_syn = args.PE_num_syn
@@ -486,8 +475,6 @@ if __name__ == '__main__':
         print("Initializing PE with RANDOM_API")
         cur_df = sample_metadata_for_randomapi(df_trn, target_ids, num_sample_per_id, args.PE_L_random+1)
         cur_df = api.RANDOM_API(cur_df)
-        if args.PE_variate:
-            cur_df = api.VARIATION_API(cur_df)
         
         if args.PE_L_random == 0:
             # 0 shot results. This is mainly for debuging and ablation study.
@@ -514,15 +501,9 @@ if __name__ == '__main__':
         print(f"PE iteration 0 ends and results saved.")
         # ===== rest PE iterations =====
         for iteration in range(1,args.PE_T+1):
-            rnd_df = sample_metadata_for_randomapi(df_trn, target_ids, num_sample_per_id, args.PE_L_random-1)
-            rnd_df = api.RANDOM_API(rnd_df)
-            if args.PE_variate:
-                rnd_df = api.VARIATION_API(rnd_df)
-            var_df = pd.concat([cur_df] * 1, ignore_index=True)
-            var_df = api.RANDOM_API(var_df)
-            if args.PE_variate:
-                var_df = api.VARIATION_API(var_df)
-            cur_df = pd.concat([cur_df,rnd_df,var_df], ignore_index=True)
+            var_df = pd.concat([cur_df] * args.PE_L_random, ignore_index=True)
+            var_df = api.VARIATION_API(var_df)
+            cur_df = pd.concat([cur_df,var_df], ignore_index=True)
             
             # From here, do per PE_LABEL_ID and then combine
             df_list = []
@@ -545,15 +526,9 @@ if __name__ == '__main__':
         cur_df = pd.read_csv(f'{args.target_dir}/PE_iter_{args.PE_continue_iter}.csv')
         # ===== rest PE iterations =====
         for iteration in range(args.PE_continue_iter+1,args.PE_T+1):
-            rnd_df = sample_metadata_for_randomapi(df_trn, target_ids, num_sample_per_id, args.PE_L_random-1)
-            rnd_df = api.RANDOM_API(rnd_df)
-            if args.PE_variate:
-                rnd_df = api.VARIATION_API(rnd_df)
-            var_df = pd.concat([cur_df] * 1, ignore_index=True)
-            var_df = api.RANDOM_API(var_df)
-            if args.PE_variate:
-                var_df = api.VARIATION_API(var_df)
-            cur_df = pd.concat([cur_df,rnd_df,var_df], ignore_index=True)
+            var_df = pd.concat([cur_df] * args.PE_L_random, ignore_index=True)
+            var_df = api.VARIATION_API(var_df)
+            cur_df = pd.concat([cur_df,var_df], ignore_index=True)
             
             # From here, do per PE_LABEL_ID and then combine
             df_list = []

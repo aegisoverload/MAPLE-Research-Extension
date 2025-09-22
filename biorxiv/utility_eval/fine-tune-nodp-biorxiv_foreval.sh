@@ -12,7 +12,7 @@ GRAD_ACCUM=8 #nproc_per_node=1
 BASE_OUTPUT_DIR="../MAPLE/results/MAPLE/epsinf_5shot_50_10examples/bert-small"
 TRAIN_DATA_PATH="../MAPLE/results/MAPLE/epsinf_5shot_50_10examples/PE_iter_3.csv"
 VALID_DATA_PATH="../biorxiv_valid_metadata.csv"
-
+TEST_DATA_PATH="../biorxiv_test_metadata.csv"
 # We follow Yue et al. 2023 similar to Aug-PE for epochs and lr
 
 # This is non-dp case
@@ -41,5 +41,8 @@ CUDA_VISIBLE_DEVICES=$1 python -m torch.distributed.run --nproc_per_node 1 fine-
 --dataloader_num_workers 8 \
 --label_names labels 
 
+# compute NTP
+CUDA_VISIBLE_DEVICES=$1 python ntp_eval.py \
+--target_dir $BASE_OUTPUT_DIR \
 
 
