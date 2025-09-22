@@ -58,16 +58,29 @@ bash ./{dataset}/main_experiment.sh [YOUR CUDA TO USE.]
 Note that we recommend to run with at least 2 A100 (40G) GPU. Please adjust the embedding batch size, embedding device (to cpu if only 1 GPU available) accordingly. 
 
 ## Evaluation
-For biorxiv:
+
+### For NTP acc evaluation
+We use dp-transformer library (Version: 1.0.1) for our implementation. Please create a seperate conda enviroment when running that part of the code.
+```
+conda create -n dptransformers python=3.12
+conda activate dptransformers
+```
+Then please follow the link [here](https://github.com/microsoft/dp-transformers) for the installation. 
+
+
+
+### For biorxiv:
 
 First use `./biorxiv/utility_eval/extract_metadata.sh` to annotate the metadata of the synthetic text. Please check the file for setting up the path correctly.
 
 Then use `./biorxiv/utility_eval/compute_mauve_jsd.sh` and `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` for computing MAUVE, JSD and training bert-small respectively.
 
-### TODO
-Training bert-small may require dp-transformer library. Need double check.
+Only executing `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` will require dp-transformers library, the other evaluations can be done under vllm conda.
 
-For openreview: 
+### For openreview: 
 use `./openreview/downstream_eval_openreview.sh` for training downstream classifier.
+
+### For pmc:
+This is the same as the biorxiv case.
 
 
