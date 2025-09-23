@@ -4,6 +4,7 @@ import pandas as pd
 import re
 from collections import Counter
 from scipy.spatial.distance import jensenshannon as jsd
+from util import set_seed
 
 import argparse
 import numpy as np
@@ -42,6 +43,9 @@ if __name__ == '__main__':
     parser.add_argument("--emb_batch_size", type=int, default=200, help="Embedding batch size")
     args = parser.parse_args()
     print(args)
+    
+    # Set random seed. Default to be 42.
+    set_seed()
     
     # === Load model ===
     embedding = SentenceTransformer(model="sentence-t5-base")

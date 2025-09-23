@@ -8,14 +8,19 @@ conda create -n maple python=3.12
 conda activate maple
 ```
 Then follow the step [here](https://docs.vllm.ai/en/v0.10.1.1/getting_started/installation/gpu.html#nvidia-cuda) to install vllm. We use Version: 0.10.1.1.
-
+```
+pip install vllm==0.10.1.1 --extra-index-url https://download.pytorch.org/whl/cu126
+```
 Then we install PE library. Check [here](https://microsoft.github.io/DPSDA/getting_started/installation.html)
 ```
 pip install "private-evolution[text] @ git+https://github.com/microsoft/DPSDA.git"
 ```
 
-### TODO
-We may possibly missing a few minor package. Double check later.
+Finally, we install some minor packages
+
+```
+pip install datasets==4.0.0
+```
 
 ## Get the dataset
 ### TODO
@@ -81,6 +86,16 @@ Only executing `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` will r
 use `./openreview/downstream_eval_openreview.sh` for training downstream classifier.
 
 ### For pmc:
-This is the same as the biorxiv case.
+This is the same as the biorxiv case. 
 
+This message is for internal use: since the training file is too large to be uploaded to github, please copy the data from the gcloud machine `~/Mycode/pycode/PMC`. The files that we will use are
+```
+pmc_train_metadata_aim_eps4.0_(1,9).csv
+pmc_train_metadata_aim_eps2.0_(1,9).csv
+pmc_train_metadata_aim_eps1.0_(1,9).csv
+PMC_V2_train_paired_t5emb.csv
+PMC_V2_valid_paired.csv
+PMC_V2_test_paired.csv
+```
+Just copy them the github fold `./MAPLE/pmc` and you may proceed with running the training scripts.
 

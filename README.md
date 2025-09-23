@@ -8,14 +8,19 @@ conda create -n maple python=3.12
 conda activate maple
 ```
 Then follow the step [here](https://docs.vllm.ai/en/v0.10.1.1/getting_started/installation/gpu.html#nvidia-cuda) to install vllm. We use Version: 0.10.1.1.
-
+```
+pip install vllm==0.10.1.1 --extra-index-url https://download.pytorch.org/whl/cu126
+```
 Then we install PE library. Check [here](https://microsoft.github.io/DPSDA/getting_started/installation.html)
 ```
 pip install "private-evolution[text] @ git+https://github.com/microsoft/DPSDA.git"
 ```
 
-### TODO
-We may possibly missing a few minor package. Double check later.
+Finally, we install some minor packages
+
+```
+pip install datasets==4.0.0
+```
 
 ## Get the dataset
 ### TODO
