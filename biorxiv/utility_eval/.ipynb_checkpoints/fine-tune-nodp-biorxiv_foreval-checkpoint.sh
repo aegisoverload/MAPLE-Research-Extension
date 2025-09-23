@@ -44,5 +44,7 @@ CUDA_VISIBLE_DEVICES=$1 python -m torch.distributed.run --nproc_per_node 1 fine-
 # compute NTP
 CUDA_VISIBLE_DEVICES=$1 python ntp_eval.py \
 --target_dir $BASE_OUTPUT_DIR \
+--tst_file_path $TEST_DATA_PATH \
+--save_path $BASE_OUTPUT_DIR
 
 

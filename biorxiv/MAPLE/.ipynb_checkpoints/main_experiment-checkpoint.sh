@@ -16,7 +16,7 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     
 # AugPE, eps=\infty
 CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
-    --target_dir "./results/PE/epsinf_10shot" \
+    --target_dir "./results/AugPE/epsinf_10shot" \
     --priv_file_path ../biorxiv_train_metadata_t5emb.csv \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
@@ -36,7 +36,7 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     
 # AugPE, eps=4.0, noise calibrated by GDP directly.
 CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
-    --target_dir "./results/PE/eps4.0_10shot" \
+    --target_dir "./results/AugPE/eps4.0_10shot" \
     --priv_file_path ../biorxiv_train_metadata_t5emb.csv \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
@@ -56,7 +56,7 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     
 # AugPE, eps=2.0, noise calibrated by GDP directly.
 CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
-    --target_dir "./results/PE/eps2.0_10shot" \
+    --target_dir "./results/AugPE/eps2.0_10shot" \
     --priv_file_path ../biorxiv_train_metadata_t5emb.csv \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
@@ -76,7 +76,7 @@ CUDA_VISIBLE_DEVICES=${GPU} python MAPLE.py \
     
 # AugPE, eps=1.0, noise calibrated by GDP directly.
 CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
-    --target_dir "./results/PE/eps1.0_10shot" \
+    --target_dir "./results/AugPE/eps1.0_10shot" \
     --priv_file_path ../biorxiv_train_metadata_t5emb.csv \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
@@ -88,7 +88,7 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE.py \
 
 # AugPE+E
 CUDA_VISIBLE_DEVICES=${GPU} python PE_nometadata.py \
-    --target_dir "./results/PE+E/epsinf_10shot" \
+    --target_dir "./results/AugPE+E/epsinf_10shot" \
     --priv_file_path ../biorxiv_train_metadata_t5emb.csv \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \
@@ -97,7 +97,7 @@ CUDA_VISIBLE_DEVICES=${GPU} python PE_nometadata.py \
     
 # AugPE+M
 CUDA_VISIBLE_DEVICES=${GPU} python PE_noexamples.py \
-    --target_dir "./results/PE+M/epsinf_10shot" \
+    --target_dir "./results/AugPE+M/epsinf_10shot" \
     --priv_file_path ../biorxiv_train_metadata_t5emb.csv \
     --train_file_path '../biorxiv_train_metadata_t5emb.csv' \
     --val_file_path ../biorxiv_valid_metadata.csv \

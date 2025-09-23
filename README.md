@@ -81,6 +81,16 @@ Only executing `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` will r
 use `./openreview/downstream_eval_openreview.sh` for training downstream classifier.
 
 ### For pmc:
-This is the same as the biorxiv case.
+This is the same as the biorxiv case. 
 
+This message is for internal use: since the training file is too large to be uploaded to github, please copy the data from the gcloud machine `~/Mycode/pycode/PMC`. The files that we will use are
+```
+pmc_train_metadata_aim_eps4.0_(1,9).csv
+pmc_train_metadata_aim_eps2.0_(1,9).csv
+pmc_train_metadata_aim_eps1.0_(1,9).csv
+PMC_V2_train_paired_t5emb.csv
+PMC_V2_valid_paired.csv
+PMC_V2_test_paired.csv
+```
+Just copy them the github fold `./MAPLE/pmc` and you may proceed with running the training scripts.
 
