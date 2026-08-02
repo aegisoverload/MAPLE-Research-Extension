@@ -83,7 +83,11 @@ Only executing `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` will r
 Use `./openreview/downstream_eval_openreview.sh` for training the downstream classifier.
 
 
-### Citation
+## Contact
+
+If you have any questions, please open an issue and/or reach out to Eli Chien (elichientwn@gmail.com) and Yuzheng Hu (yh46@illinois.edu).
+
+## Citation
 If you find our code or work useful, please consider citing our paper (will be updated to COLM citation after the camera-ready version is made public):
 ```
 @article{chien2026maple,
