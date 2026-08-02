@@ -1,4 +1,6 @@
 # MAPLE: Metadata-Augmented Private Language Evolution (COLM 2026)
+## Paper Link
+[Arxiv](https://arxiv.org/abs/2603.19258), [COLM 2026] (TBA)
 
 ## Environment setup:
 
