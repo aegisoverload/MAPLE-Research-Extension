@@ -1,8 +1,8 @@
-# MAPLE: Metadata-Augmented Private Language Evolution
+# MAPLE: Metadata-Augmented Private Language Evolution (COLM 2026)
 
-## Enviroment setup:
+## Environment setup:
 
-First we create a virtual enviroment (here we use conda)
+First, we create a virtual environment (here we use conda)
 ```
 conda create -n maple python=3.12
 conda activate maple
@@ -23,30 +23,27 @@ pip install datasets==4.0.0
 ```
 
 ## Get the dataset
-### TODO
-We should specify how to get the dataset. For internal use, I've already put all necessary files in the correct directory. The dataset should come with annotated metadata.
+We already put all necessary files in the correct directory. The dataset should come with annotated metadata.
 
 ### Optional
-If you want to annotate the metadata yourself with our schema, please check `./biorxiv/utility_eval/extract_metadata.py` or use `./biorxiv/utility_eval/extract_metadata.sh` to run. By default we use Gemini 2.5 flash-lite. Please change the corresponding part in the code if needed. Remeber to provide API_KEY as well.
+If you want to annotate the metadata yourself with our schema, please check `./biorxiv/utility_eval/extract_metadata.py` or use `./biorxiv/utility_eval/extract_metadata.sh` to run. By default, we use Gemini 2.5 flash-lite. Please change the corresponding part in the code if needed. Remember to provide API_KEY as well.
 
 ## Privatizing metadata
-For internal use, we have provided the aim-privatized metadata in the correct folder. So this step can be skipped.
+We have provided the aim-privatized metadata in the correct folder. So this step can be skipped. However, you may also run AIM yourself, following the steps below.
 
 We privatize metadata using AIM. See [here](https://github.com/ryan112358/mbi) for the detail of AIM. 
 
-We recommend to create a new virtual enviroment to install and execute AIM.
+We recommend creating a new virtual environment to install and execute AIM.
 ```
 conda create -n aim python=3.12
 conda activate aim
 pip install mbi==1.0.0
 ```
 
-Then you may modify and run `./aim/run_aim.sh` with proper path. Example use:
+Then you may modify and run `./aim/run_aim.sh` with the proper path. Example use:
 ```
 CUDA_VISIBLE_DEVICES=$1 python workplace_biorxiv.py --data_path ../biorxiv/biorxiv_train_metadata_t5emb.csv --save_path [SAVE_PATH] --rho [RHO FOR AIM, CHECK THE PRIVACY_ACCOUNTING PART]
 ```
-
-For the value of rho, please use `./Privacy_accounting.ipynb` for our pre-computed value. You may also set your own value.
 
 ## Run MAPLE
 
@@ -56,11 +53,11 @@ python ./biorxiv/add_t5emb.py
 python ./openreview/add_t5emb.py
 ```
 
-For dataset = biorxiv/openreview, please check `./{dataset}/main_experiment.sh` if you want to run a specific method and hyperparameter setting. Otherwise you may simply run
+For dataset = biorxiv/openreview, please check `./{dataset}/main_experiment.sh` if you want to run a specific method and hyperparameter setting. Otherwise, you may simply run
 ```
 bash ./{dataset}/main_experiment.sh [YOUR CUDA TO USE.]
 ```
-Note that we recommend to run with at least 2 A100 (40G) GPU. Please adjust the embedding batch size, embedding device (to cpu if only 1 GPU available) accordingly. 
+Note that we recommend running with at least 2 A100 (40G) GPUs. Please adjust the embedding batch size and embedding device (to cpu if only 1 GPU available) accordingly. 
 
 ## Evaluation
 
@@ -76,26 +73,23 @@ Then please follow the link [here](https://github.com/microsoft/dp-transformers)
 
 ### For biorxiv:
 
-First use `./biorxiv/utility_eval/extract_metadata.sh` to annotate the metadata of the synthetic text. Please check the file for setting up the path correctly.
+First, use `./biorxiv/utility_eval/extract_metadata.sh` to annotate the metadata of the synthetic text. Please check the file for setting up the path correctly.
 
-Then use `./biorxiv/utility_eval/compute_mauve_jsd.sh` and `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` for computing MAUVE, JSD and training bert-small respectively.
+Then use `./biorxiv/utility_eval/compute_mauve_jsd.sh` and `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` for computing MAUVE, JSD, and training bert-small respectively.
 
-Only executing `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` will require dp-transformers library, the other evaluations can be done under vllm conda.
+Only executing `./biorxiv/utility_eval/fine-tune-nodp-biorxiv_foreval.sh` will require the dp-transformers library; the other evaluations can be done under vLLM conda.
 
 ### For openreview: 
-use `./openreview/downstream_eval_openreview.sh` for training downstream classifier.
+Use `./openreview/downstream_eval_openreview.sh` for training the downstream classifier.
 
-### For pmc:
-This is the same as the biorxiv case. 
 
-This message is for internal use: since the training file is too large to be uploaded to github, please copy the data from the gcloud machine `~/Mycode/pycode/PMC`. The files that we will use are
+### Citation
+If you find our code or work useful, please consider citing our paper (will be updated to COLM citation after the camera-ready version is made public):
 ```
-pmc_train_metadata_aim_eps4.0_(1,9).csv
-pmc_train_metadata_aim_eps2.0_(1,9).csv
-pmc_train_metadata_aim_eps1.0_(1,9).csv
-PMC_V2_train_paired_t5emb.csv
-PMC_V2_valid_paired.csv
-PMC_V2_test_paired.csv
+@article{chien2026maple,
+  title={Maple: Metadata augmented private language evolution},
+  author={Chien, Eli and Hu, Yuzheng and McKenna, Ryan and Wu, Shanshan and Xu, Zheng and Kairouz, Peter},
+  journal={arXiv preprint arXiv:2603.19258},
+  year={2026}
+}
 ```
-Just copy them the github fold `./MAPLE/pmc` and you may proceed with running the training scripts.
-
