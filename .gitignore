@@ -1,0 +1,26 @@
+# Team local environment and generated files (append to existing .gitignore)
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*credentials*.json
+secrets/
+results/
+runs/
+logs/
+cache/
+checkpoints/
+models/
+image_extension/data/
+image_extension/runs/
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+.DS_Store

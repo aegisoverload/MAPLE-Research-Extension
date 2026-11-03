@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maple-image-handoff"
+version = "0.1.0"
+description = "Image MAPLE experiment skeleton with pluggable image-generation API and local private voting"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24,<3", "Pillow>=10,<13"]
+
+[project.optional-dependencies]
+gemini = ["google-genai>=1.0"]
+clip = ["torch>=2.2", "transformers>=4.45,<6"]
+
+[project.scripts]
+maple-image = "image_maple.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
