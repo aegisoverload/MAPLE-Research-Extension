@@ -1,0 +1,45 @@
+# Environment for the CelebA-HQ initialization pilot (verified on nano5, Python 3.11, CUDA 12.4).
+#
+# Setup (env and caches on /work, not /home):
+#   ml load miniconda3/24.11.1
+#   export CONDA_PKGS_DIRS=/work/$USER/.conda_pkgs PIP_CACHE_DIR=/work/$USER/.cache/pip
+#   conda create -y -p /work/$USER/envs/maple-img python=3.11
+#   P=/work/$USER/envs/maple-img/bin/pip
+#   $P install torch==2.6.0 torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
+#   $P install -r image_extension/pilot/requirements.txt
+#   $P install --no-deps facenet-pytorch==2.6.0   # its deps pin an old torch; --no-deps keeps torch 2.6
+#
+# Weights are fetched on the login node (compute jobs run with HF_HUB_OFFLINE=1):
+#   hf download Qwen/Qwen-Image-Edit-2511 --local-dir /work/$USER/models/Qwen-Image-Edit-2511
+#   hf download openai/clip-vit-base-patch16 --local-dir /work/$USER/models/clip-vit-base-patch16
+
+# Generation. QwenImageEditPlusPipeline is only in diffusers main; pinned to the tested commit.
+diffusers @ git+https://github.com/huggingface/diffusers@8c54b38fea3d624d23d0e43c0c96037f080a79f9
+transformers==5.22.2
+accelerate==1.15.0
+safetensors==0.8.0
+huggingface_hub==2.4.0
+
+# AIM (aim/). The repo code targets the mbi 1.0.0 API (Dataset.df); newer mbi, jax>0.7
+# or pandas 3.x break it (missing Dataset.df, tracer errors, groupby.apply dropping keys).
+mbi==1.0.0
+jax[cpu]==0.7.0
+jaxlib==0.7.0
+chex==0.1.90
+optax==0.2.5
+pandas==2.3.1
+absl-py==2.5.1
+attrs==26.1.0
+more-itertools==11.2.1
+networkx==3.6.1
+
+# Evaluation
+pytorch-fid==0.3.0
+scikit-learn==1.9.1
+scipy==1.17.1
+
+# Common
+numpy==2.4.6
+pillow==13.0.0
+tqdm==4.70.1
+gdown==6.5.1
