@@ -41,6 +41,10 @@ def fid_at_n(x, ref, n, draws, seed=0):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--draws', type=int, default=10)
+    ap.add_argument('--groups', default='', help='comma list of run/group to evaluate (default: all)')
+    ap.add_argument('--compare', default='', help='comma list of run/group used as N-matched references '
+                                                   '(default: all other groups)')
+    ap.add_argument('--out', default='filter_eval.json')
     args = ap.parse_args()
 
     models = {'inception': Inception(), 'clip': Clip(), 'face': FaceNet()}
@@ -79,7 +83,10 @@ def main():
         print('embedded', run, g, len(e['face_nn']), flush=True)
 
     res = {'thresholds': thr, 'draws': args.draws, 'groups': {}}
-    for key, e in E.items():
+    todo = args.groups.split(',') if args.groups else list(E)
+    compare = args.compare.split(',') if args.compare else list(E)
+    for key in todo:
+        e = E[key]
         x = e['inception']
         keep_face = e['face_nn'] <= thr['face']
         keep_both = keep_face & (e['clip_nn'] <= thr['clip'])
@@ -93,11 +100,11 @@ def main():
                 'kid_kept_x1e3': kid(x[keep], ref[:n_ref]),
                 'fid_random_subset_same_n': fid_at_n(x, ref, k, args.draws),
                 'fid_other_groups_at_n': {o: fid_at_n(E[o]['inception'], ref, k, args.draws)
-                                          for o in E if o != key}}
+                                          for o in compare if o != key}}
         res['groups'][key] = r
         print(key, json.dumps(r, indent=1), flush=True)
 
-    out = WORK / 'runs' / 'filter_eval.json'
+    out = WORK / 'runs' / args.out
     out.write_text(json.dumps(res, indent=2))
     print('wrote', out)
 

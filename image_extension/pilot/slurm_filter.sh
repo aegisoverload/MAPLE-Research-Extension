@@ -15,5 +15,5 @@ ml purge; ml load miniconda3/24.11.1
 PY=/work/$USER/envs/maple-img/bin/python
 export HF_HOME=/work/$USER/.cache/huggingface TORCH_HOME=/work/$USER/.cache/torch HF_HUB_OFFLINE=1
 cd /home/$USER/MAPLE-Research-Extension/image_extension/pilot
-$PY filter_eval.py
+$PY filter_eval.py ${FILTER_ARGS:-}
 echo FILTER_DONE
