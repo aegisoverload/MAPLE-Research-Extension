@@ -21,12 +21,13 @@ def main():
     ap.add_argument('--aim-fraction', type=float, default=0.1)
     ap.add_argument('--num-gen', type=int, default=500)
     ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--delta', default='1/n', help="'1/n' (1/n_private) or a number, e.g. 1e-6")
     ap.add_argument('--out', default='', help='output CSV (default: WORK/dp_metadata_v2_eps<E>.csv)')
     args = ap.parse_args()
 
     df = load_split('private')[list(SCHEMA)]
     n = len(df)
-    delta = 1.0 / n
+    delta = 1.0 / n if args.delta == '1/n' else float(args.delta)
     rho_total = accounting.zcdp_rho(args.epsilon, delta)
     rho_aim = args.aim_fraction * rho_total
     domains = {k: domain.CategoricalAttribute(v) for k, v in SCHEMA.items()}
