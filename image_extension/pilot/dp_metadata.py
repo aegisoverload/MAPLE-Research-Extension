@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from pilot_common import SCHEMA, WORK
+from pilot_common import SCHEMA, WORK, load_split
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'aim'))
 import accounting  # noqa: E402
@@ -21,9 +21,10 @@ def main():
     ap.add_argument('--aim-fraction', type=float, default=0.1)
     ap.add_argument('--num-gen', type=int, default=500)
     ap.add_argument('--seed', type=int, default=0)
+    ap.add_argument('--out', default='', help='output CSV (default: WORK/dp_metadata_v2_eps<E>.csv)')
     args = ap.parse_args()
 
-    df = pd.read_csv(WORK / 'private.csv')[list(SCHEMA)]
+    df = load_split('private')[list(SCHEMA)]
     n = len(df)
     delta = 1.0 / n
     rho_total = accounting.zcdp_rho(args.epsilon, delta)
@@ -32,7 +33,7 @@ def main():
     synth = generate.run(domains, df, epsilon=0.0, delta=0.0, rho=rho_aim, seed=args.seed,
                          num_records=args.num_gen, pgm_iters=1000)
     synth = synth[list(SCHEMA)]
-    out = WORK / f'dp_metadata_eps{args.epsilon:g}.csv'
+    out = Path(args.out) if args.out else WORK / f'dp_metadata_v2_eps{args.epsilon:g}.csv'
     synth.to_csv(out, index=False)
 
     def tvd(c):
@@ -40,7 +41,7 @@ def main():
         q = synth[c].value_counts(normalize=True)
         return float(0.5 * (p.subtract(q, fill_value=0).abs().sum()))
 
-    report = {'epsilon_total': args.epsilon, 'delta': delta, 'rho_total': rho_total,
+    report = {'schema': 'v2', 'epsilon_total': args.epsilon, 'delta': delta, 'rho_total': rho_total,
               'rho_aim': rho_aim, 'aim_fraction': args.aim_fraction, 'n_private': n,
               'num_gen': args.num_gen, 'seed': args.seed,
               'marginal_tvd': {c: round(tvd(c), 4) for c in SCHEMA}}

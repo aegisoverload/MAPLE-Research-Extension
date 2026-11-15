@@ -2,6 +2,12 @@
 
 Metadata schema: 9 categorical attributes derived from CelebA's native 40 binary labels,
 matching MAPLE's 9-attribute bioRxiv setting. No data-dependent binning.
+
+Schema v2 (2026-11-13): hair_color 'other' (no CelebA hair label, 35% of private) is renamed
+'unspecified' and the generation prompt omits hair colour for it. analyze_hair.py showed it is a mix of
+missed labels (CLIP: ~35% brown, ~20% blond, ~19% black, ~12% gray, ~6% red/auburn, ~6% hat), so neither
+the old 'red or dyed' prompt nor a merge into brown is faithful. The pilot CSVs still carry 'other';
+always read them through load_split() so the rename is applied.
 """
 import os
 from pathlib import Path
@@ -15,7 +21,7 @@ SCHEMA = {
     'gender': ['female', 'male'],
     'age': ['young', 'older'],
     'smiling': ['no', 'yes'],
-    'hair_color': ['black', 'blond', 'brown', 'gray', 'bald', 'other'],
+    'hair_color': ['black', 'blond', 'brown', 'gray', 'bald', 'unspecified'],
     'eyeglasses': ['no', 'yes'],
     'facial_hair': ['none', 'beard'],
     'makeup': ['no', 'yes'],
@@ -38,7 +44,7 @@ def attrs_to_schema(a):
     elif pos('Brown_Hair'):
         hair = 'brown'
     else:
-        hair = 'other'
+        hair = 'unspecified'  # schema v2: no CelebA hair label
     return {
         'gender': 'male' if pos('Male') else 'female',
         'age': 'young' if pos('Young') else 'older',
@@ -58,8 +64,8 @@ def describe(m):
     parts = [f"a {'young' if m['age'] == 'young' else 'middle-aged or older'} {person}"]
     if m['hair_color'] == 'bald':
         parts.append('bald')
-    elif m['hair_color'] == 'other':
-        parts.append('with hair of another color (e.g. red or dyed)')
+    elif m['hair_color'] in ('unspecified', 'other'):
+        pass  # no hair-colour constraint; the model chooses
     else:
         parts.append(f"with {m['hair_color']} hair")
     parts.append('with bangs' if m['bangs'] == 'yes' else 'without bangs')
@@ -69,6 +75,17 @@ def describe(m):
     parts.append('wearing heavy makeup' if m['makeup'] == 'yes' else 'without heavy makeup')
     parts.append('wearing a hat' if m['hat'] == 'yes' else 'not wearing a hat')
     return ', '.join(parts)
+
+
+HAIR_RENAME = {'other': 'unspecified'}
+
+
+def load_split(name):
+    """private / donated manifest with the schema-v2 hair rename applied."""
+    import pandas as pd
+    df = pd.read_csv(WORK / f'{name}.csv')
+    df['hair_color'] = df['hair_color'].replace(HAIR_RENAME)
+    return df
 
 
 def hamming(a, b):
