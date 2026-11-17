@@ -19,6 +19,12 @@ Arms (--arm):
   pe      Private Evolution baseline: init is text-to-image from the generic prompt (no DP metadata, no
           reference image; the pilot's 'random' group), VARIATION also uses the generic prompt, and the whole
           budget goes to the votes (no AIM). The copy filter stays on so all arms are filtered alike.
+  spti    SPTI baseline (evolution in caption space, Image Voting): RANDOM = the LLM writes a portrait caption
+          from the same public description as pe, VARIATION = the LLM rewrites a kept image's caption, and every
+          caption is rendered text-to-image as BASE + caption. Votes are on the rendered images (Inception), the
+          whole budget goes to the votes as in pe, and the copy filter stays on. The LLM is the Qwen2.5-VL-7B
+          text encoder already loaded by Qwen-Image (no extra weights). Image Voting never reads private
+          captions, so no private captioning step is needed.
 
 Layout: WORK/<root>/config.json, dp_metadata_eps<E>.{csv,json}
         WORK/<root>/eps<E>/init/{00000.png, log_rank*.jsonl}                  (maple; shared by random)
@@ -26,6 +32,7 @@ Layout: WORK/<root>/config.json, dp_metadata_eps<E>.{csv,json}
         WORK/<root>/eps<E>/T<T>/eval.json
         WORK/<root>/eps<E>/random/T<T>/...                                    (random arm)
         WORK/<root>/eps<E>/pe/{init, T<T>/...}                                (pe arm)
+        WORK/<root>/eps<E>/spti/{init, T<T>/...}                              (spti arm; csv/log carry 'caption')
 
 Privacy (conditional accounting; same assumptions as privacy_accounting_calibrated.py, not an audit):
   person-level replace-one adjacency (prepare_celeba keeps one image per identity), delta = --delta
@@ -58,7 +65,21 @@ CLIP_THR = 0.853   # pilot p99 of real-private vs donated CLIP cosine (frozen; r
 CONFIG_KEYS = ('N', 'L', 'strengths', 'steps', 'size', 'cfg', 'face_thr', 'max_tries', 'aim_fraction', 'seed',
                'delta')
 CONFIG_DEFAULTS = {'delta': '1/n'}  # keys added after a root was created; an old root implicitly has these
-ARMS = ('maple', 'random', 'pe')
+ARMS = ('maple', 'random', 'pe', 'spti')
+NO_META_ARMS = ('pe', 'spti')  # no AIM step: the whole budget goes to the votes, no target metadata
+# SPTI caption LLM (sampling settings are logged with every caption)
+# top_k and repetition_penalty are set explicitly: the text encoder's generation_config.json ships
+# top_k=1 (near-greedy), which otherwise survives and collapses all captions to a few modes.
+LLM_SAMPLING = {'do_sample': True, 'temperature': 1.0, 'top_p': 0.95, 'top_k': 0, 'repetition_penalty': 1.0,
+                'max_new_tokens': 160}
+SPTI_RANDOM = ('Write a description of a realistic, high-quality close-up portrait photograph of a single person, '
+               'face centered and looking roughly at the camera, head and shoulders visible. Invent a new, specific '
+               'person and describe their apparent age, gender, ethnicity, hair, facial expression, any accessories, '
+               'clothing, lighting and background. Make it 40 to 70 words. Output only the description.')
+SPTI_VARIATION = ('Here is a description of a portrait photograph:\n\n{caption}\n\nRewrite it as a description of '
+                  'a similar portrait photograph of a different person: keep the overall style, but change some '
+                  'details such as age, expression, hair, accessories, clothing, lighting or background. Make it '
+                  '40 to 70 words. Output only the description.')
 
 
 # ---------------------------------------------------------------- paths / config
@@ -110,7 +131,7 @@ def sigma_for(a, n_private):
     import accounting
     delta = delta_of(a, n_private)
     rho_total = accounting.zcdp_rho(a.eps, delta)
-    aim_fraction = 0.0 if a.arm == 'pe' else a.aim_fraction  # PE has no metadata step
+    aim_fraction = 0.0 if a.arm in NO_META_ARMS else a.aim_fraction  # PE / SPTI have no metadata step
     rho_votes = (1 - aim_fraction) * rho_total
     K = a.T + 1
     sigma = math.sqrt(2) * math.sqrt(K / (2 * rho_votes))
@@ -157,6 +178,17 @@ class Generator:
                     num_inference_steps=self.a.steps, height=self.a.size, width=self.a.size,
                     generator=self.torch.Generator('cuda').manual_seed(seed))
 
+    def caption(self, instruction, seed):
+        """SPTI LLM call: sample one caption from the Qwen2.5-VL text encoder (text only)."""
+        tok, lm = self.edit.tokenizer, self.edit.text_encoder
+        text = tok.apply_chat_template([{'role': 'user', 'content': instruction}], tokenize=False,
+                                       add_generation_prompt=True)
+        ids = tok(text, return_tensors='pt').to(lm.device)
+        self.torch.manual_seed(seed)
+        with self.torch.inference_mode():
+            out = lm.generate(**ids, **LLM_SAMPLING, pad_token_id=tok.pad_token_id or tok.eos_token_id)
+        return ' '.join(tok.decode(out[0, ids['input_ids'].shape[1]:], skip_special_tokens=True).split())
+
     def face_nn(self, img):
         from PIL import Image
         # same 256px LANCZOS downscale as evaluate_init.load256, so filter and evaluation agree
@@ -190,6 +222,8 @@ def gen_init(a):
         raise SystemExit('the random arm reuses the maple init; run gen-init with --arm maple')
     if a.arm == 'pe':
         return gen_init_pe(a)
+    if a.arm == 'spti':
+        return gen_init_spti(a)
     from PIL import Image
     from generate_init import BASE, REF_INSTRUCTION
     meta = pd.read_csv(meta_csv(a))[list(SCHEMA)].astype(str).to_dict('records')
@@ -249,6 +283,55 @@ def gen_init_pe(a):
     log.close()
 
 
+def gen_init_spti(a):
+    """SPTI RANDOM: the LLM writes a caption from public information, rendered text-to-image."""
+    from generate_init import BASE
+    n = a.N * (a.L + 1)
+    out = init_dir(a)
+    out.mkdir(parents=True, exist_ok=True)
+    done = read_log(out)
+    todo = [i for i in range(a.rank, n, a.world) if f'{i:05d}' not in done]
+    print(f'gen-init arm=spti eps={a.eps} rank={a.rank}: {len(todo)} to do', flush=True)
+    if not todo:
+        return
+    g = Generator(a, need_var=False, need_t2i=True)
+    log = (out / f'log_rank{a.rank}.jsonl').open('a')
+    for i in todo:
+        cap = g.caption(SPTI_RANDOM, seed_of(a.seed, 0, i, 777))
+        prompt = f'{BASE} {cap}'
+
+        def make(attempt, i=i, prompt=prompt):  # a copy retry keeps the caption and redraws the image
+            seed = seed_of(a.seed, 0, i, attempt)
+            return g.t2i(**g.common(prompt, seed)).images[0], {'seed': seed, 'prompt': prompt}
+
+        img, tries, ok = g.run(make)
+        write(out, log, f'{i:05d}', img, {'i': i, 'metadata': None, 'caption': cap, 'llm': LLM_SAMPLING,
+                                          'accepted': ok, 'tries': tries})
+    log.close()
+
+
+def gen_var_spti(a, parents, out, todo):
+    """SPTI VARIATION: the LLM rewrites the parent's caption, rendered text-to-image."""
+    from generate_init import BASE
+    t = a.iter
+    g = Generator(a, need_var=False, need_t2i=True)
+    log = (out / f'log_rank{a.rank}.jsonl').open('a')
+    for j, k in todo:
+        p = parents.iloc[j]
+        cap = g.caption(SPTI_VARIATION.format(caption=p['caption']), seed_of(a.seed, a.T, t, j, k, 777))
+        prompt = f'{BASE} {cap}'
+
+        def make(attempt, j=j, k=k, prompt=prompt):
+            seed = seed_of(a.seed, a.T, t, j, k, attempt)
+            return g.t2i(**g.common(prompt, seed)).images[0], {'seed': seed, 'prompt': prompt}
+
+        img, tries, ok = g.run(make)
+        write(out, log, f'{j:04d}_{k}', img, {'parent': j, 'parent_path': p['path'], 'metadata': None,
+                                              'caption': cap, 'parent_caption': p['caption'], 'llm': LLM_SAMPLING,
+                                              'accepted': ok, 'tries': tries})
+    log.close()
+
+
 def gen_var(a):
     from PIL import Image
     from generate_init import BASE
@@ -266,6 +349,8 @@ def gen_var(a):
     print(f'gen-var eps={a.eps} T={a.T} iter={t} rank={a.rank}: {len(todo)} to do', flush=True)
     if not todo:
         return
+    if a.arm == 'spti':
+        return gen_var_spti(a, parents, out, todo)
     g = Generator(a, need_var=True)
     log = (out / f'log_rank{a.rank}.jsonl').open('a')
     for j, k in todo:
@@ -290,6 +375,10 @@ def meta_cols(m):
     return {c: (m[c] if m else 'none') for c in SCHEMA}  # pe has no metadata
 
 
+def caption_col(a, r):
+    return {'caption': r['caption']} if a.arm == 'spti' else {}  # other arms keep their csv columns unchanged
+
+
 def pool_of(a, t):
     """Candidate pool of iteration t: init (t=0) or kept parents of t-1 plus their variations."""
     rows = []
@@ -303,11 +392,12 @@ def pool_of(a, t):
         for name, r in sorted(log.items()):
             if r['accepted']:
                 rows.append({'path': str(d / f'{name}.png'), 'origin': 'init', 'parent': -1,
-                             **meta_cols(r['metadata'])})
+                             **meta_cols(r['metadata']), **caption_col(a, r)})
     else:
         prev = pd.read_csv(iter_dir(a, t - 1) / 'selected.csv')
         for _, p in prev.iterrows():
-            rows.append({'path': p['path'], 'origin': 'kept', 'parent': -1, **{c: p[c] for c in SCHEMA}})
+            rows.append({'path': p['path'], 'origin': 'kept', 'parent': -1, **{c: p[c] for c in SCHEMA},
+                         **caption_col(a, p)})
         d = iter_dir(a, t) / 'var'
         log = read_log(d)
         missing = [f'{j:04d}_{k}' for j in range(len(prev)) for k in range(a.L) if f'{j:04d}_{k}' not in log]
@@ -316,7 +406,7 @@ def pool_of(a, t):
         for name, r in sorted(log.items()):
             if r['accepted']:
                 rows.append({'path': str(d / f'{name}.png'), 'origin': 'variation', 'parent': r['parent'],
-                             **meta_cols(r['metadata'])})
+                             **meta_cols(r['metadata']), **caption_col(a, r)})
     return pd.DataFrame(rows), len(log)
 
 
@@ -406,7 +496,7 @@ def evaluate(a):
             pred = pd.Series(probes[c].predict(E['clip']))
             q = pred.value_counts(normalize=True).reindex(priv_marg[c].index, fill_value=0)
             r['metadata_jsd'][c] = jsd(priv_marg[c].to_numpy(), q.to_numpy())
-            if a.arm == 'pe':
+            if a.arm in NO_META_ARMS:
                 continue  # no target metadata to agree with
             want = sel[c].astype(str).reset_index(drop=True)
             mask = want != 'unspecified'  # hair: score only labeled classes

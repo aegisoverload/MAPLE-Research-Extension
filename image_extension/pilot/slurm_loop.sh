@@ -15,7 +15,8 @@
 # Smoke test: EPS=1 TS=1 LOOP_ARGS="--root full_smoke --N 8 --L 1 --steps 8 --size 512" \
 #             sbatch --partition=dev --time=02:00:00 slurm_loop.sh
 # Arms (LOOP_ARGS --arm): maple (default) | random (needs maple's gen-init finished at this eps; submit with
-#   --dependency=afterok:<maple job>, or after it) | pe (own init, no metadata).
+#   --dependency=afterok:<maple job>, or after it) | pe (own init, no metadata) | spti (caption-space
+#   evolution with the Qwen2.5-VL text encoder as LLM, own init, no metadata).
 set -euo pipefail
 nvidia-smi -L; echo "host=$(hostname)"
 ml purge; ml load miniconda3/24.11.1
